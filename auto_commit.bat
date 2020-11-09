@@ -13,6 +13,6 @@ set BRANCH = "origin"
 %GIT_PATH% push %BRANCH%
 
 echo.
-echo commit finished
+echo [######### commit finished #########]
 
 Pause
