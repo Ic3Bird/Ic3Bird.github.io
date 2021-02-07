@@ -1,4 +1,4 @@
-define(["require", "exports", "./Login/login", "./Common/loginValidation", "./Finance/finance", "./Common/navbar"], function (require, exports, login, loginV, finance, navBar) {
+define(["require", "exports", "./Login/login", "./Common/loginValidation", "./Finance/finance", "./Common/navbar", "./Common/pageFrame"], function (require, exports, login, loginV, finance, navBar, pageFrame) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     startPage();
@@ -6,10 +6,12 @@ define(["require", "exports", "./Login/login", "./Common/loginValidation", "./Fi
         clearBody();
         let loginStatus = loginV.checkLoginStatus();
         if (loginStatus.validationStatus) {
+            pageFrame.setPageTitle();
             navBar.displayNavBar();
             finance.displayFinance();
         }
         else {
+            pageFrame.setLoginPageTitle();
             login.displayLoginPanel();
         }
     }

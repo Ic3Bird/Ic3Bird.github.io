@@ -2,7 +2,7 @@ define(["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function myAPIsource() {
-        return "https://snowart.azurewebsites.net";
+        return "http://localhost:60694";
     }
     exports.myAPIsource = myAPIsource;
 });
