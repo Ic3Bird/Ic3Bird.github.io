@@ -148,8 +148,7 @@ define(["require", "exports"], function (require, exports) {
         }
         else {
             if (BActiveDropDown != "") {
-                let openDropdownList = document.getElementById(BMultiselectContainer + BActiveDropDown);
-                openDropdownList.style.display = "none";
+                CloseOpenDropDown();
             }
             dropdownList.style.display = "block";
             BActiveDropDown = ObjectID;
@@ -171,8 +170,7 @@ define(["require", "exports"], function (require, exports) {
                 obj = obj.parentElement;
             }
             if (closeActiveDropDown) {
-                let openDropdownList = document.getElementById(BMultiselectContainer + BActiveDropDown);
-                openDropdownList.style.display = "none";
+                CloseOpenDropDown();
                 BActiveDropDown = "";
             }
         }
@@ -309,6 +307,10 @@ define(["require", "exports"], function (require, exports) {
         }
         if (selectionCount == 1) {
             selectionResultObj.innerText = selectedValue;
+            if (BIsSingelSelect) {
+                CloseOpenDropDown();
+                BActiveDropDown = "";
+            }
         }
         else {
             selectionResultObj.innerText = selectionCount + "/" + ListCount + " Selected";
@@ -323,6 +325,12 @@ define(["require", "exports"], function (require, exports) {
             }
         }
         return false;
+    }
+    function CloseOpenDropDown() {
+        let openDropdownList = document.getElementById(BMultiselectContainer + BActiveDropDown);
+        if (openDropdownList != null) {
+            openDropdownList.style.display = "none";
+        }
     }
     function TrustMultiselect_GetSelectionText_List(PoriginalListID) {
         let OriginalList = document.getElementById(PoriginalListID);
@@ -358,6 +366,7 @@ define(["require", "exports"], function (require, exports) {
     function TrustMultiselect_IDForChange(PoriginalListID) {
         return BDropDownHeaderResultSpan + PoriginalListID;
     }
+    exports.TrustMultiselect_IDForChange = TrustMultiselect_IDForChange;
     function TrustMultiselect_EnableAllSelections(PoriginalListID, PEnable) {
         if (PEnable == undefined || PEnable == null) {
             PEnable = true;
@@ -368,5 +377,7 @@ define(["require", "exports"], function (require, exports) {
         let searchTextBox = document.getElementById(BSearchTextBox + PoriginalListID);
         searchTextBox.value = "";
         selectAll(searchTextBox);
+    }
+    function TrustMultiselect_AddExternalEvent() {
     }
 });

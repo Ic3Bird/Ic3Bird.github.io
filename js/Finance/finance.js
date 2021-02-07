@@ -7,7 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-define(["require", "exports", "../Common/loginValidation", "../Common/serverSettings", "../Common/screenHelper", "../Common/TRUSTmultiSelect"], function (require, exports, loginV, serverSettings_1, screens, myMultiSelect) {
+define(["require", "exports", "../Common/loginValidation", "../Common/serverSettings", "../Common/screenHelper", "../Common/TRUSTmultiSelect", "../Common/errorHandling"], function (require, exports, loginV, serverSettings_1, screens, myMultiSelect, errorHandling) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function displayFinance() {
@@ -208,19 +208,28 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
         return __awaiter(this, void 0, void 0, function* () {
             yield FillFinanceDropdow();
             myMultiSelect.TRUSTmultiSelect("finance_group_list");
+            AddChangeForCreatedDropDown();
             return Promise.resolve(1);
         });
+    }
+    function AddChangeForCreatedDropDown() {
+        const elementToObserve = document.getElementById(myMultiSelect.TrustMultiselect_IDForChange("finance_group_list"));
+        const observer = new MutationObserver(fianceGroupChangeHandler);
+        observer.observe(elementToObserve, { subtree: true, childList: true });
     }
     function SaveFinanceRecord() {
         return __awaiter(this, void 0, void 0, function* () {
             const postBody = {
+                "ID": 0,
                 "RecordDate": document.getElementById("datepicker_input").value,
                 "FinanceGroupID": Number(myMultiSelect.TrustMultiselect_GetSelectionValue_List("finance_group_list")[0]),
                 "Reason": document.getElementById("finance_reason").value,
                 "Amount": Number(document.getElementById("finance_price_input").value.replace(/ /g, '').trim()),
             };
+            postBody.ID = 8074;
+            const saveMethod = postBody.ID == 0 ? 'POST' : 'PUT';
             const saveResponse = yield fetch(serverSettings_1.myAPIsource() + "/finance/expense", {
-                method: 'POST',
+                method: saveMethod,
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
@@ -228,18 +237,12 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
                 },
                 body: JSON.stringify(postBody)
             });
-            saveResponseHandler(saveResponse);
+            const saveResult = yield saveResponse.json();
+            ShowResponse(saveResult);
+            if (saveResult.actionSucced) {
+                ShowLastActivity();
+            }
         });
-    }
-    function saveResponseHandler(response) {
-        if (response.status == 200) {
-            screens.showServerResponse('Expesne inserted', false);
-            FinanceGroupdDropDownMain();
-            ShowLastActivity();
-        }
-        else {
-            screens.showServerResponse('Expesne inserted failed', true);
-        }
     }
     function AddFinanceGroup() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -260,27 +263,31 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
             }).then(response => response.json())
                 .then(json => ShowResponse(json))
                 .then(FinanceGroupdDropDownMain);
-            ShowLastActivity();
         });
     }
     function FillFinanceDropdow() {
         return __awaiter(this, void 0, void 0, function* () {
-            let financeGroups;
+            let financeGroupResponse;
             const radioButton = document.getElementById("expense_radio");
             if (radioButton.checked) {
-                financeGroups = yield DownloadActiveExpenseGroups();
+                financeGroupResponse = yield DownloadActiveExpenseGroups();
             }
             else {
-                financeGroups = yield DownloadActiveIncomeGroups();
+                financeGroupResponse = yield DownloadActiveIncomeGroups();
             }
             const finaceGroupsDropDown = document.getElementById("finance_group_list");
             finaceGroupsDropDown.innerHTML = '';
-            for (var i = 0; i < financeGroups.length; i++) {
-                let obj = financeGroups[i];
-                let option = document.createElement("option");
-                option.text = obj.groupName;
-                option.value = obj.id;
-                finaceGroupsDropDown.add(option);
+            if (financeGroupResponse.actionSucced) {
+                for (var i = 0; i < financeGroupResponse.financeGroupTypes.length; i++) {
+                    let obj = financeGroupResponse.financeGroupTypes[i];
+                    let option = document.createElement("option");
+                    option.text = obj.groupName;
+                    option.value = obj.id;
+                    finaceGroupsDropDown.add(option);
+                }
+            }
+            else {
+                errorHandling.ShowServerError(financeGroupResponse);
             }
             return Promise.resolve(1);
         });
@@ -324,17 +331,31 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
             return rawResponse.json();
         });
     }
-    function ShowResponse(reponseText) {
-        screens.showServerResponse(reponseText, false);
+    function ShowResponse(reponseObject) {
+        if (reponseObject.actionSucced) {
+            let responseText = "Action Succed";
+            if (reponseObject.successMessage != null) {
+                responseText = reponseObject.successMessage;
+            }
+            screens.showServerResponse(responseText, false);
+        }
+        else {
+            errorHandling.ShowServerError(reponseObject);
+        }
     }
     function ShowLastActivity() {
         return __awaiter(this, void 0, void 0, function* () {
-            let lastActivity = yield DownloadLastActivity();
+            let lastActivityResponse = yield DownloadLastActivity();
             const container = document.getElementById("finace_historical_activity");
             container.innerHTML = "";
             container.appendChild(createHistroyHeader());
-            for (var i = 0; i < lastActivity.length; i++) {
-                container.appendChild(createLastActivityItem(lastActivity[i]));
+            if (lastActivityResponse.actionSucced) {
+                for (var i = 0; i < lastActivityResponse.financeRecordDetails.length; i++) {
+                    container.appendChild(createLastActivityItem(lastActivityResponse.financeRecordDetails[i]));
+                }
+            }
+            else {
+                errorHandling.ShowServerError(lastActivityResponse);
             }
         });
     }
@@ -403,5 +424,51 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
             addDatepicker();
             return Promise.resolve(1);
         });
+    }
+    function fianceGroupChangeHandler() {
+        return __awaiter(this, void 0, void 0, function* () {
+            clearFinanceRecordFileds();
+            loadPredefinedValues();
+        });
+    }
+    function clearFinanceRecordFileds() {
+        document.getElementById("finance_reason").value = "";
+        document.getElementById("finance_price_input").value = "";
+    }
+    function loadPredefinedValues() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const groupID = Number(myMultiSelect.TrustMultiselect_GetSelectionValue_List("finance_group_list")[0]);
+            let predefinedValuesResponse = yield downloadPredefinedFinanceRecord(groupID);
+            if (predefinedValuesResponse.actionSucced) {
+                if (predefinedValuesResponse.financeRecordPredifinedValue != null) {
+                    showPerdefinedValues(predefinedValuesResponse.financeRecordPredifinedValue);
+                }
+            }
+            else {
+                errorHandling.ShowServerError(predefinedValuesResponse);
+            }
+        });
+    }
+    function downloadPredefinedFinanceRecord(groupID) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const rawResponse = yield fetch(serverSettings_1.myAPIsource() + "/finance/records/groups" + '/' + groupID, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + loginV.getToken()
+                }
+            });
+            return rawResponse.json();
+        });
+    }
+    function showPerdefinedValues(predefinedValues) {
+        if (predefinedValues.reason != null) {
+            document.getElementById("finance_reason").value = predefinedValues.reason;
+        }
+        if (predefinedValues.amount != null) {
+            document.getElementById("finance_price_input").value = predefinedValues.amount;
+            addThousanSeparator("finance_price_input");
+        }
     }
 });
