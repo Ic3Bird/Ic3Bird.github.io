@@ -226,7 +226,6 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
                 "Reason": document.getElementById("finance_reason").value,
                 "Amount": Number(document.getElementById("finance_price_input").value.replace(/ /g, '').trim()),
             };
-            postBody.ID = 8074;
             const saveMethod = postBody.ID == 0 ? 'POST' : 'PUT';
             const saveResponse = yield fetch(serverSettings_1.myAPIsource() + "/finance/expense", {
                 method: saveMethod,
