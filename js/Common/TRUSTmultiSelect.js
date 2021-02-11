@@ -82,8 +82,8 @@ define(["require", "exports"], function (require, exports) {
         SearchBox.id = 'TRUST_multiselect_searchBox_' + BOriginalObjectID;
         SearchBox.setAttribute("type", "text");
         SearchBox.placeholder = "Search";
+        SearchBox.onkeyup = () => search(SearchBox);
         SearchBox_div.appendChild(SearchBox);
-        SearchBox_div.onkeyup = () => search(SearchBox);
         appendNewChild(SearchBox_div);
     }
     function createSelectAllBox() {
@@ -114,13 +114,14 @@ define(["require", "exports"], function (require, exports) {
         selection_list_div.classList.add("selection-list-container");
         appendNewChild(selection_list_div);
     }
-    function createSelectionRow(POriginalID, RowID, LabelText, PIsSelected) {
+    function createSelectionRow(POriginalID, RowID, FinanceFroupdId, LabelText, PIsSelected) {
         let selection_container = document.createElement("div");
         selection_container.id = 'selection_container_' + POriginalID + "_" + RowID;
         selection_container.classList.add("item");
         let checkbox = document.createElement('input');
         checkbox.type = "checkbox";
         checkbox.id = "selection_CheckBox_" + POriginalID + "_" + RowID;
+        checkbox.setAttribute('name', 'selection_CheckBox_' + POriginalID + '_' + FinanceFroupdId);
         checkbox.checked = PIsSelected;
         checkbox.disabled = IsSelectDisable(POriginalID);
         checkbox.classList.add("checkbox");
@@ -152,6 +153,8 @@ define(["require", "exports"], function (require, exports) {
             }
             dropdownList.style.display = "block";
             BActiveDropDown = ObjectID;
+            let searchTextBox = document.getElementById(BSearchTextBox + ObjectID);
+            searchTextBox.focus();
         }
     }
     function autoCloseDropdown(event) {
@@ -202,7 +205,7 @@ define(["require", "exports"], function (require, exports) {
         var argRegEx = new RegExp(regexText, 'i');
         for (let i = 0; i < ListCount; i++) {
             if (OriginalList.options[i].text.replace(/\./g, "").search(argRegEx) > -1) {
-                let selectionRow = createSelectionRow(POriginalSelectionListID, i, OriginalList.options[i].text, OriginalList.options[i].selected);
+                let selectionRow = createSelectionRow(POriginalSelectionListID, i, OriginalList.options[i].value, OriginalList.options[i].text, OriginalList.options[i].selected);
                 optionList_div.appendChild(selectionRow);
             }
         }
@@ -380,4 +383,15 @@ define(["require", "exports"], function (require, exports) {
     }
     function TrustMultiselect_AddExternalEvent() {
     }
+    function ChangeSelectionByName(PoriginalListID, FinanceGroupId) {
+        if (checkIsSingleSelect(PoriginalListID)) {
+            let searchTextBox = document.getElementById(BSearchTextBox + PoriginalListID);
+            searchTextBox.dispatchEvent(new Event('focus'));
+            searchTextBox.value = "";
+            searchTextBox.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'a' }));
+            let rates = document.getElementsByName('selection_CheckBox_' + PoriginalListID + '_' + FinanceGroupId);
+            rates[0].click();
+        }
+    }
+    exports.ChangeSelectionByName = ChangeSelectionByName;
 });

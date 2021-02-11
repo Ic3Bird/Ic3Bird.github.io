@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 define(["require", "exports", "../Common/loginValidation", "../Common/serverSettings", "../Common/screenHelper", "../Common/TRUSTmultiSelect", "../Common/errorHandling"], function (require, exports, loginV, serverSettings_1, screens, myMultiSelect, errorHandling) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
+    let observer = null;
     function displayFinance() {
         return __awaiter(this, void 0, void 0, function* () {
             screens.addModalWindow();
@@ -25,7 +26,7 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
     exports.displayFinance = displayFinance;
     function createCompenents() {
         const financeContainer = createFinanceContainer();
-        const financeRecordAdd = createfinanceRecordAdd();
+        const financeRecordAdd = createFinanceRecordAdd();
         financeContainer.appendChild(financeRecordAdd);
         const financeGroupdAdd = createfinanceGroupdAddPanel();
         financeContainer.appendChild(financeGroupdAdd);
@@ -40,39 +41,16 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
         financeMainContainer.style.visibility = 'hidden';
         return financeMainContainer;
     }
-    function createfinanceRecordAdd() {
+    function createFinanceRecordAdd() {
         const financeRecordAdd = (document.createElement('div'));
         financeRecordAdd.id = "finance_record_add";
         financeRecordAdd.classList.add("finance-panel");
-        financeRecordAdd.appendChild(createExpenseRadioButtons());
         financeRecordAdd.appendChild(createFinanceGroupPickerPanel());
         financeRecordAdd.appendChild(createFinceTimePickerPanel());
         financeRecordAdd.appendChild(createPriceSetPanel());
         financeRecordAdd.appendChild(createFinanceReasonPanel());
         financeRecordAdd.appendChild(createFinaceButtonPanel());
         return financeRecordAdd;
-    }
-    function createExpenseRadioButtons() {
-        const radioGroup = 'recordType';
-        const financeIncExp = (document.createElement('div'));
-        financeIncExp.id = "finace_income_expense_change";
-        financeIncExp.classList.add("income-expense-panel");
-        financeIncExp.appendChild(createParagraph('Income'));
-        const income = (document.createElement('input'));
-        income.type = 'radio';
-        income.onclick = (e) => FinanceGroupdDropDownMain();
-        income.name = radioGroup;
-        income.id = "income_radio";
-        financeIncExp.appendChild(income);
-        financeIncExp.appendChild(createParagraph('Expense'));
-        const expense = (document.createElement('input'));
-        expense.type = 'radio';
-        expense.onclick = (e) => FinanceGroupdDropDownMain();
-        expense.checked = true;
-        expense.name = radioGroup;
-        expense.id = "expense_radio";
-        financeIncExp.appendChild(expense);
-        return financeIncExp;
     }
     function createParagraph(text) {
         const paragraph = (document.createElement('p'));
@@ -83,6 +61,7 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
         const financeGroupdComp = (document.createElement('div'));
         financeGroupdComp.id = "finace_group_picker";
         financeGroupdComp.classList.add("finance-group-picker-panel");
+        financeGroupdComp.setAttribute("loaded-finance-id", '0');
         const financeGroupds = (document.createElement('select'));
         financeGroupds.id = "finance_group_list";
         const subDiv = (document.createElement('div'));
@@ -107,7 +86,7 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
         fincePriceSetComp.classList.add("finance-subcomeponent-panel");
         const priceInputElement = creatInputBox("finance_price_input", false);
         priceInputElement.classList.add("input-text-center");
-        priceInputElement.onkeyup = (e) => addThousanSeparator("finance_price_input");
+        priceInputElement.onkeyup = (e) => addThousandSeparator("finance_price_input");
         fincePriceSetComp.appendChild(priceInputElement);
         return fincePriceSetComp;
     }
@@ -187,22 +166,21 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
         financeLastActivity.classList.add("finance-history-panel");
         return financeLastActivity;
     }
-    function addThousanSeparator(inputboxId) {
+    function addThousandSeparator(inputboxId) {
         let priceInputElement = document.getElementById(inputboxId);
-        let priceValueOriginal = priceInputElement.value;
-        let priceValueStr = priceInputElement.value.replace(/ /g, '');
+        priceInputElement.value = thousandSeparatorConverter(priceInputElement.value);
+    }
+    function thousandSeparatorConverter(valueToConvert) {
+        let originalValue = valueToConvert;
+        let priceValueStr = valueToConvert.toString().replace(/ /g, '');
         let priceValue = Number(priceValueStr);
-        if (!isNaN(priceValue)) {
-            if (priceValue >= 1000) {
-                priceInputElement.value = priceValueStr.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-            }
-            else {
-                priceInputElement.value = priceValue.toString();
-            }
+        if (isNaN(priceValue)) {
+            return originalValue;
         }
-        else {
-            priceInputElement.value = priceValueOriginal;
+        if (priceValue >= 1000) {
+            return priceValueStr.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
         }
+        return priceValueStr;
     }
     function FinanceGroupdDropDownMain() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -214,13 +192,13 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
     }
     function AddChangeForCreatedDropDown() {
         const elementToObserve = document.getElementById(myMultiSelect.TrustMultiselect_IDForChange("finance_group_list"));
-        const observer = new MutationObserver(fianceGroupChangeHandler);
+        observer = new MutationObserver(fianceGroupChangeHandler);
         observer.observe(elementToObserve, { subtree: true, childList: true });
     }
     function SaveFinanceRecord() {
         return __awaiter(this, void 0, void 0, function* () {
             const postBody = {
-                "ID": 0,
+                "ID": getFinanceIdForEdit(),
                 "RecordDate": document.getElementById("datepicker_input").value,
                 "FinanceGroupID": Number(myMultiSelect.TrustMultiselect_GetSelectionValue_List("finance_group_list")[0]),
                 "Reason": document.getElementById("finance_reason").value,
@@ -266,14 +244,7 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
     }
     function FillFinanceDropdow() {
         return __awaiter(this, void 0, void 0, function* () {
-            let financeGroupResponse;
-            const radioButton = document.getElementById("expense_radio");
-            if (radioButton.checked) {
-                financeGroupResponse = yield DownloadActiveExpenseGroups();
-            }
-            else {
-                financeGroupResponse = yield DownloadActiveIncomeGroups();
-            }
+            let financeGroupResponse = yield DownloadActiveGroups();
             const finaceGroupsDropDown = document.getElementById("finance_group_list");
             finaceGroupsDropDown.innerHTML = '';
             if (financeGroupResponse.actionSucced) {
@@ -304,22 +275,9 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
             return rawResponse.json();
         });
     }
-    function DownloadActiveIncomeGroups() {
+    function DownloadActiveGroups() {
         return __awaiter(this, void 0, void 0, function* () {
-            const rawResponse = yield fetch(serverSettings_1.myAPIsource() + "/finance/group/income/active", {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + loginV.getToken()
-                }
-            });
-            return rawResponse.json();
-        });
-    }
-    function DownloadActiveExpenseGroups() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const rawResponse = yield fetch(serverSettings_1.myAPIsource() + "/finance/group/expense/active", {
+            const rawResponse = yield fetch(serverSettings_1.myAPIsource() + "/finance/group/active", {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json',
@@ -362,40 +320,59 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
         let headerDiv = document.createElement("div");
         headerDiv.classList.add("finance-histroy-row");
         let recDatePara = document.createElement("P");
+        recDatePara.classList.add("record-date-column");
         recDatePara.innerHTML = "Record Date";
         headerDiv.appendChild(recDatePara);
         let GroupPara = document.createElement("P");
+        GroupPara.classList.add("finance-group-column");
         GroupPara.innerHTML = "Fiance Group";
         headerDiv.appendChild(GroupPara);
         let amountPara = document.createElement("P");
+        amountPara.classList.add("amount-column");
         amountPara.innerHTML = "Amount";
         headerDiv.appendChild(amountPara);
         let reasonPara = document.createElement("P");
+        reasonPara.classList.add("reason-column");
         reasonPara.innerHTML = "Reason";
         headerDiv.appendChild(reasonPara);
         let saveDatePara = document.createElement("P");
+        saveDatePara.classList.add("save-date-column");
         saveDatePara.innerHTML = "Save Date";
         headerDiv.appendChild(saveDatePara);
+        let editPara = document.createElement("P");
+        editPara.classList.add("edit-icon");
+        headerDiv.appendChild(editPara);
         return headerDiv;
     }
     function createLastActivityItem(financeHistoryRecord) {
         let div = document.createElement("div");
         div.classList.add("finance-histroy-row");
+        div.setAttribute('fr_id', financeHistoryRecord.fR_ID);
         let recDatePara = document.createElement("P");
+        recDatePara.classList.add("record-date-column");
         recDatePara.innerHTML = financeHistoryRecord.recordDate.slice(0, 10);
         div.appendChild(recDatePara);
         let GroupPara = document.createElement("P");
+        GroupPara.classList.add("finance-group-column");
         GroupPara.innerHTML = financeHistoryRecord.groupName;
         div.appendChild(GroupPara);
         let amountPara = document.createElement("P");
-        amountPara.innerHTML = financeHistoryRecord.amount;
+        amountPara.classList.add("amount-column");
+        amountPara.innerHTML = thousandSeparatorConverter(financeHistoryRecord.amount);
         div.appendChild(amountPara);
         let reasonPara = document.createElement("P");
+        reasonPara.classList.add("reason-column");
         reasonPara.innerHTML = financeHistoryRecord.reason;
         div.appendChild(reasonPara);
         let saveDatePara = document.createElement("P");
+        saveDatePara.classList.add("save-date-column");
         saveDatePara.innerHTML = financeHistoryRecord.saveDate.replace("T", " ");
         div.appendChild(saveDatePara);
+        let editImg = document.createElement("img");
+        editImg.classList.add("edit-icon");
+        editImg.src = "assets/img/edit-icon-512.png";
+        editImg.onclick = (e) => initiateFinanceRecordForEdit(editImg);
+        div.appendChild(editImg);
         return div;
     }
     function addDatepicker() {
@@ -427,12 +404,20 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
     function fianceGroupChangeHandler() {
         return __awaiter(this, void 0, void 0, function* () {
             clearFinanceRecordFileds();
+            saveFinanceIdForEdit(0);
             loadPredefinedValues();
         });
     }
     function clearFinanceRecordFileds() {
         document.getElementById("finance_reason").value = "";
         document.getElementById("finance_price_input").value = "";
+    }
+    function saveFinanceIdForEdit(financeID) {
+        document.getElementById("finace_group_picker").setAttribute("loaded-finance-id", financeID);
+    }
+    function getFinanceIdForEdit() {
+        let finaceRecordID = Number(document.getElementById("finace_group_picker").getAttribute("loaded-finance-id"));
+        return finaceRecordID > 0 ? finaceRecordID : 0;
     }
     function loadPredefinedValues() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -467,7 +452,53 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
         }
         if (predefinedValues.amount != null) {
             document.getElementById("finance_price_input").value = predefinedValues.amount;
-            addThousanSeparator("finance_price_input");
+            addThousandSeparator("finance_price_input");
+        }
+    }
+    function initiateFinanceRecordForEdit(sourceObject) {
+        return __awaiter(this, void 0, void 0, function* () {
+            clearMutationObserver();
+            vizualiseFinanceRecordData(yield loadFinanceRecordForEdit(sourceObject.parentNode.getAttribute("fr_id")));
+            AddChangeForCreatedDropDown();
+        });
+    }
+    function loadFinanceRecordForEdit(financeRecordId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const rawResponse = yield fetch(serverSettings_1.myAPIsource() + "/finance/expense" + '/' + financeRecordId, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + loginV.getToken()
+                }
+            });
+            return rawResponse.json();
+        });
+    }
+    function clearMutationObserver() {
+        observer.disconnect();
+        observer = null;
+    }
+    function vizualiseFinanceRecordData(reponseObject) {
+        if (reponseObject.actionSucced) {
+            const finaceRecord = reponseObject.financeRecordType;
+            saveFinanceIdForEdit(finaceRecord.id);
+            if (Number(myMultiSelect.TrustMultiselect_GetSelectionValue_List("finance_group_list")[0]) != Number(finaceRecord.financeGroupID)) {
+                myMultiSelect.ChangeSelectionByName("finance_group_list", finaceRecord.financeGroupID);
+            }
+            const recordDateInput = document.getElementById("datepicker_input");
+            recordDateInput.dispatchEvent(new Event('focus'));
+            recordDateInput.value = finaceRecord.recordDate;
+            recordDateInput.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'a' }));
+            const colseButton = document.getElementsByClassName('the-datepicker__close');
+            colseButton[0].childNodes[0].dispatchEvent(new Event('click'));
+            const amountInput = document.getElementById("finance_price_input");
+            amountInput.value = finaceRecord.amount;
+            amountInput.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'a' }));
+            document.getElementById("finance_reason").value = finaceRecord.reason;
+        }
+        else {
+            errorHandling.ShowServerError(reponseObject);
         }
     }
 });

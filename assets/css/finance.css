@@ -12,13 +12,6 @@
     width: 300px;
 }
 
-.income-expense-panel {
-    display: flex;  
-    align-items: center;
-    justify-content: center;
-    height: 40px;
-}
-
 .finance-group-picker-panel {
     display: flex;
     align-items: center;
@@ -44,4 +37,35 @@
     display: flex;
     align-items: center;
     justify-content: space-evenly;
+}
+
+.record-date-column{
+    width: 90px;
+    margin-left: 30px;
+    text-align: center;
+}
+
+.finance-group-column{
+    width: 140px;
+    text-align: center;
+}
+
+.amount-column{
+    width: 70px;
+    text-align: center;
+}
+
+.reason-column{
+    width: 200px;
+    text-align: center;
+}
+
+.save-date-column{
+    width: 120px;
+    text-align: center;
+}
+
+.edit-icon {
+    width: 22px;
+    cursor: pointer;
 }
