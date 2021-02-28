@@ -12,6 +12,18 @@
     width: 300px;
 }
 
+.finance-group-panel {
+    border: 1px solid black;
+    height: 300px;
+    width: 300px;
+}
+
+.finance-csv-panel {
+    border: 1px solid black;
+    height: 30px;
+    width: 190px;
+}
+
 .finance-group-picker-panel {
     display: flex;
     align-items: center;

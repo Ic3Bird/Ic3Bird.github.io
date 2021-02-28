@@ -16,6 +16,8 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
             screens.addModalWindow();
             screens.addLodingScreen();
             createCompenents();
+            addDatepicker("datepicker_finance_record_input");
+            addDatepicker("finance_record_csv_download");
             yield financeRecordStartUp();
             const financeMainContainer = (document.getElementById("finance_container"));
             financeMainContainer.style.visibility = '';
@@ -32,6 +34,8 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
         financeContainer.appendChild(financeGroupdAdd);
         const financeLastActivity = createFinanceHistoryPanel();
         financeContainer.appendChild(financeLastActivity);
+        const finaceCsvDownload = createDownloadCsvPanel();
+        financeContainer.appendChild(finaceCsvDownload);
         document.body.appendChild(financeContainer);
     }
     function createFinanceContainer() {
@@ -74,7 +78,7 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
         finceTimePickerComp.id = "finace_datepicker";
         finceTimePickerComp.classList.add("finance-subcomeponent-panel");
         const subDiv = (document.createElement('div'));
-        const dateInputElement = creatInputBox("datepicker_input");
+        const dateInputElement = creatInputBox("datepicker_finance_record_input");
         dateInputElement.classList.add("input-text-center");
         subDiv.appendChild(dateInputElement);
         finceTimePickerComp.appendChild(subDiv);
@@ -125,7 +129,7 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
     function createfinanceGroupdAddPanel() {
         const financeGroupdAdd = (document.createElement('div'));
         financeGroupdAdd.id = "finance_group_add";
-        financeGroupdAdd.classList.add("finance-panel");
+        financeGroupdAdd.classList.add("finance-group-panel");
         financeGroupdAdd.appendChild(createNewGroupNamePanel());
         financeGroupdAdd.appendChild(createNewGroupTypePanel());
         financeGroupdAdd.appendChild(createNewFinaceGroupSaveButtonPanel());
@@ -166,6 +170,17 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
         financeLastActivity.classList.add("finance-history-panel");
         return financeLastActivity;
     }
+    function createDownloadCsvPanel() {
+        const financeRecordCsvPanel = (document.createElement('div'));
+        financeRecordCsvPanel.id = "finance_record_csv";
+        financeRecordCsvPanel.classList.add("finance-csv-panel");
+        const dateInputElement = creatInputBox("finance_record_csv_download");
+        dateInputElement.classList.add("input-text-center");
+        financeRecordCsvPanel.appendChild(dateInputElement);
+        const saveButton = createButton("finance_record_csv_download", 'get', () => { getFinanceRecordCsv(); });
+        financeRecordCsvPanel.appendChild(saveButton);
+        return financeRecordCsvPanel;
+    }
     function addThousandSeparator(inputboxId) {
         let priceInputElement = document.getElementById(inputboxId);
         priceInputElement.value = thousandSeparatorConverter(priceInputElement.value);
@@ -199,7 +214,7 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
         return __awaiter(this, void 0, void 0, function* () {
             const postBody = {
                 "ID": getFinanceIdForEdit(),
-                "RecordDate": document.getElementById("datepicker_input").value,
+                "RecordDate": document.getElementById("datepicker_finance_record_input").value,
                 "FinanceGroupID": Number(myMultiSelect.TrustMultiselect_GetSelectionValue_List("finance_group_list")[0]),
                 "Reason": document.getElementById("finance_reason").value,
                 "Amount": Number(document.getElementById("finance_price_input").value.replace(/ /g, '').trim()),
@@ -375,8 +390,8 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
         div.appendChild(editImg);
         return div;
     }
-    function addDatepicker() {
-        const input = document.getElementById("datepicker_input");
+    function addDatepicker(inputId) {
+        const input = document.getElementById(inputId);
         const datepicker = new TheDatepicker.Datepicker(input);
         datepicker.options.setInputFormat('Y-m-d');
         datepicker.options.setMinDate('2010-01-01');
@@ -397,7 +412,6 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
         return __awaiter(this, void 0, void 0, function* () {
             yield FinanceGroupdDropDownMain();
             ShowLastActivity();
-            addDatepicker();
             return Promise.resolve(1);
         });
     }
@@ -486,7 +500,7 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
             if (Number(myMultiSelect.TrustMultiselect_GetSelectionValue_List("finance_group_list")[0]) != Number(finaceRecord.financeGroupID)) {
                 myMultiSelect.ChangeSelectionByName("finance_group_list", finaceRecord.financeGroupID);
             }
-            const recordDateInput = document.getElementById("datepicker_input");
+            const recordDateInput = document.getElementById("datepicker_finance_record_input");
             recordDateInput.dispatchEvent(new Event('focus'));
             recordDateInput.value = finaceRecord.recordDate;
             recordDateInput.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'a' }));
@@ -500,5 +514,37 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
         else {
             errorHandling.ShowServerError(reponseObject);
         }
+    }
+    function getFinanceRecordCsv() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const requestedDate = document.getElementById("finance_record_csv_download").value;
+            const url = serverSettings_1.myAPIsource() + "/finance/records/csv" + '/' + requestedDate;
+            const options = {
+                method: 'GET',
+                headers: {
+                    Authorization: 'Bearer ' + loginV.getToken(),
+                }
+            };
+            const rawResponse = yield fetch(url, options);
+            const response = yield rawResponse.json();
+            const myblob = new Blob([b64DecodeUnicode(response.file.fileContents)], {
+                type: response.file.contentType
+            });
+            showFile(myblob, response.file.fileDownloadName);
+        });
+    }
+    function b64DecodeUnicode(str) {
+        return decodeURIComponent(atob(str).split('').map(function (c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+    }
+    function showFile(blob, fileName) {
+        var url = window.URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
     }
 });
