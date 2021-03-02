@@ -7,7 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-define(["require", "exports", "../Common/loginValidation", "../Common/serverSettings", "../Common/screenHelper", "../Common/TRUSTmultiSelect", "../Common/errorHandling"], function (require, exports, loginV, serverSettings_1, screens, myMultiSelect, errorHandling) {
+define(["require", "exports", "../Common/loginValidation", "../Common/serverSettings", "../Common/screenHelper", "../Common/TRUSTmultiSelect", "../Common/errorHandling", "../Common/requestHandler"], function (require, exports, loginV, serverSettings_1, screens, myMultiSelect, errorHandling, requestHandler_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     let observer = null;
@@ -220,15 +220,17 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
                 "Amount": Number(document.getElementById("finance_price_input").value.replace(/ /g, '').trim()),
             };
             const saveMethod = postBody.ID == 0 ? 'POST' : 'PUT';
-            const saveResponse = yield fetch(serverSettings_1.myAPIsource() + "/finance/expense", {
+            const url = serverSettings_1.myAPIsource() + "/finance/expense";
+            const options = {
                 method: saveMethod,
                 headers: {
-                    'Accept': 'application/json',
+                    Accept: 'application/json',
                     'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + loginV.getToken()
+                    Authorization: 'Bearer ' + loginV.getToken(),
                 },
                 body: JSON.stringify(postBody)
-            });
+            };
+            const saveResponse = yield requestHandler_1.initateRequest(url, options);
             const saveResult = yield saveResponse.json();
             ShowResponse(saveResult);
             if (saveResult.actionSucced) {
@@ -238,23 +240,28 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
     }
     function AddFinanceGroup() {
         return __awaiter(this, void 0, void 0, function* () {
-            var mybody = {
+            var postBody = {
                 "GroupName": document.getElementById("new_finance_group_input").value,
                 "IsIncome": document.getElementById("input_isincome").checked,
                 "IsReport": document.getElementById("input_isreport").checked,
                 "IsActive": true
             };
-            yield fetch(serverSettings_1.myAPIsource() + "/finance/group", {
+            const url = serverSettings_1.myAPIsource() + "/finance/group";
+            const options = {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/json',
+                    Accept: 'application/json',
                     'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + loginV.getToken()
+                    Authorization: 'Bearer ' + loginV.getToken(),
                 },
-                body: JSON.stringify(mybody)
-            }).then(response => response.json())
-                .then(json => ShowResponse(json))
-                .then(FinanceGroupdDropDownMain);
+                body: JSON.stringify(postBody)
+            };
+            const rawResponse = yield requestHandler_1.initateRequest(url, options);
+            const response = yield rawResponse.json();
+            ShowResponse(response);
+            if (response.actionSucced) {
+                yield FinanceGroupdDropDownMain();
+            }
         });
     }
     function FillFinanceDropdow() {
@@ -279,27 +286,31 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
     }
     function DownloadLastActivity() {
         return __awaiter(this, void 0, void 0, function* () {
-            const rawResponse = yield fetch(serverSettings_1.myAPIsource() + "/finance/history/record", {
+            const url = serverSettings_1.myAPIsource() + "/finance/history/record";
+            const options = {
                 method: 'GET',
                 headers: {
-                    'Accept': 'application/json',
+                    Accept: 'application/json',
                     'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + loginV.getToken()
+                    Authorization: 'Bearer ' + loginV.getToken(),
                 }
-            });
+            };
+            const rawResponse = yield requestHandler_1.initateRequest(url, options);
             return rawResponse.json();
         });
     }
     function DownloadActiveGroups() {
         return __awaiter(this, void 0, void 0, function* () {
-            const rawResponse = yield fetch(serverSettings_1.myAPIsource() + "/finance/group/active", {
+            const url = serverSettings_1.myAPIsource() + "/finance/group/active";
+            const options = {
                 method: 'GET',
                 headers: {
-                    'Accept': 'application/json',
+                    Accept: 'application/json',
                     'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + loginV.getToken()
+                    Authorization: 'Bearer ' + loginV.getToken(),
                 }
-            });
+            };
+            const rawResponse = yield requestHandler_1.initateRequest(url, options);
             return rawResponse.json();
         });
     }
@@ -449,14 +460,16 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
     }
     function downloadPredefinedFinanceRecord(groupID) {
         return __awaiter(this, void 0, void 0, function* () {
-            const rawResponse = yield fetch(serverSettings_1.myAPIsource() + "/finance/records/groups" + '/' + groupID, {
+            const url = serverSettings_1.myAPIsource() + "/finance/records/groups" + '/' + groupID;
+            const options = {
                 method: 'GET',
                 headers: {
-                    'Accept': 'application/json',
+                    Accept: 'application/json',
                     'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + loginV.getToken()
+                    Authorization: 'Bearer ' + loginV.getToken(),
                 }
-            });
+            };
+            const rawResponse = yield requestHandler_1.initateRequest(url, options);
             return rawResponse.json();
         });
     }
@@ -478,14 +491,16 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
     }
     function loadFinanceRecordForEdit(financeRecordId) {
         return __awaiter(this, void 0, void 0, function* () {
-            const rawResponse = yield fetch(serverSettings_1.myAPIsource() + "/finance/expense" + '/' + financeRecordId, {
+            const url = serverSettings_1.myAPIsource() + "/finance/expense" + '/' + financeRecordId;
+            const options = {
                 method: 'GET',
                 headers: {
-                    'Accept': 'application/json',
+                    Accept: 'application/json',
                     'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + loginV.getToken()
+                    Authorization: 'Bearer ' + loginV.getToken(),
                 }
-            });
+            };
+            const rawResponse = yield requestHandler_1.initateRequest(url, options);
             return rawResponse.json();
         });
     }
@@ -525,7 +540,7 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
                     Authorization: 'Bearer ' + loginV.getToken(),
                 }
             };
-            const rawResponse = yield fetch(url, options);
+            const rawResponse = yield requestHandler_1.initateRequest(url, options);
             const response = yield rawResponse.json();
             const myblob = new Blob([b64DecodeUnicode(response.file.fileContents)], {
                 type: response.file.contentType
