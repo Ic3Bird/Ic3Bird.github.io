@@ -5,3 +5,25 @@ body {
     flex-flow: column;
     height: 100%;
 }
+
+@keyframes loader {
+    0% {
+		width: 0;
+	}
+
+    100% {
+		width: 100%;
+	}
+}
+
+.loading-bar{
+    background-color: #75b800;
+    height: 0.3vh;
+    position: absolute;
+    width: 10vw;
+    left: 0;
+    right: 0;
+    margin-left: auto;
+    margin-right: auto;
+    animation: loader 4s ease infinite;
+}

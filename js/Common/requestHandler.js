@@ -12,11 +12,21 @@ define(["require", "exports"], function (require, exports) {
     Object.defineProperty(exports, "__esModule", { value: true });
     function initateRequest(url, options) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log('request started');
+            loadingBarProgressStart();
             const response = yield fetch(url, options);
-            console.log('request ended');
+            loadingBarProgressStop();
             return response;
         });
     }
     exports.initateRequest = initateRequest;
+    function loadingBarProgressStart() {
+        const loadingBar = (document.createElement('div'));
+        loadingBar.classList.add('loading-bar');
+        loadingBar.id = 'request_loding_bar';
+        document.body.appendChild(loadingBar);
+    }
+    function loadingBarProgressStop() {
+        let loadingBar = document.getElementById('request_loding_bar');
+        loadingBar.remove();
+    }
 });
