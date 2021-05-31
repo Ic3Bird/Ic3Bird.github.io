@@ -177,6 +177,10 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
         const dateInputElement = creatInputBox("finance_record_csv_download");
         dateInputElement.classList.add("input-text-center");
         financeRecordCsvPanel.appendChild(dateInputElement);
+        const isLog = (document.createElement('input'));
+        isLog.type = 'checkbox';
+        isLog.id = "input_logdate";
+        financeRecordCsvPanel.appendChild(isLog);
         const saveButton = createButton("finance_record_csv_download", 'get', () => { getFinanceRecordCsv(); });
         financeRecordCsvPanel.appendChild(saveButton);
         return financeRecordCsvPanel;
@@ -533,7 +537,7 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
     function getFinanceRecordCsv() {
         return __awaiter(this, void 0, void 0, function* () {
             const requestedDate = document.getElementById("finance_record_csv_download").value;
-            const url = serverSettings_1.myAPIsource() + "/finance/records/csv" + '/' + requestedDate;
+            const url = getCsvUrl() + requestedDate;
             const options = {
                 method: 'GET',
                 headers: {
@@ -547,6 +551,12 @@ define(["require", "exports", "../Common/loginValidation", "../Common/serverSett
             });
             showFile(myblob, response.file.fileDownloadName);
         });
+    }
+    function getCsvUrl() {
+        if (document.getElementById("input_logdate").checked) {
+            return serverSettings_1.myAPIsource() + "/finance/records/csv/log" + '/';
+        }
+        return serverSettings_1.myAPIsource() + "/finance/records/csv" + '/';
     }
     function b64DecodeUnicode(str) {
         return decodeURIComponent(atob(str).split('').map(function (c) {
