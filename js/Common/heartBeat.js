@@ -19,4 +19,5 @@ function wakeUpCall() {
         console.log(result);
     });
 }
+console.log('start 0');
 setInterval(wakeUpCall, 5 * 60 * 1000);
