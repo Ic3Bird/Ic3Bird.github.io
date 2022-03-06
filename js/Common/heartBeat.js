@@ -7,19 +7,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-define(["require", "exports", "../Common/serverSettings"], function (require, exports, serverSettings_1) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    setInterval(wakeUpCall, 5 * 60 * 1000);
-    function wakeUpCall() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const result = yield fetch(serverSettings_1.myAPIsource() + '/heartbeat', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            console.log(result);
+function wakeUpCall() {
+    return __awaiter(this, void 0, void 0, function* () {
+        console.log('start');
+        const result = yield fetch('https://snowart.azurewebsites.net/heartbeat', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
         });
-    }
-});
+        console.log(result);
+    });
+}
+setInterval(wakeUpCall, 5 * 60 * 1000);
